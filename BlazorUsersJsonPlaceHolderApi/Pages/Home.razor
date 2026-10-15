@@ -1,0 +1,59 @@
+﻿@page "/"
+@using System.Net
+@using BlazorUsersJsonPlaceHolderApi.Models
+@inject HttpClient Http
+
+<PageTitle>Home</PageTitle>
+
+<h1>Consulta Personagem 1</h1>
+
+<button class="btn btn-primary mt-2" @onclick="ConsultaPersonagem">Consultar</button>
+
+@if (root != null)
+{
+    <h3 class="mt-4">Informações do Personagem</h3>
+    <p><strong>Nome:</strong> @root.name</p>
+    <p><strong>Cidade:</strong> @root.address?.city</p>
+    <p><strong>Empresa:</strong> @root.company?.name</p>
+}
+@if (!string.IsNullOrEmpty(errorMenssage))
+{
+    <div class="alert alert-danger mt-4">
+        @errorMenssage
+    </div>
+}
+
+@code {
+    private int? id;
+    private Root? root;
+    private string? errorMenssage;
+
+    private async Task ConsultaPersonagem()
+    {
+        errorMenssage = string.Empty;
+        root = null;
+
+        try
+        {
+            var url = "https://jsonplaceholder.typicode.com/users/1";
+            root = await Http.GetFromJsonAsync<Root>(url);
+            if (root == null)
+            {
+                root = null;
+                errorMenssage = "Personagem não encontrado.";
+            }
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.BadRequest)
+        {
+            errorMenssage = "Personagem não encontrado ou id inválido.";
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMenssage = $"Erro ao conectar à API: {ex.Message}";
+        }
+        catch (Exception ex)
+        {
+            errorMenssage = $"Ocorreu um erro: {ex.Message}";
+        }
+    }
+}
